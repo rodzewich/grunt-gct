@@ -74,13 +74,16 @@ module.exports = function (grunt) {
                 });
             },
             function (next) {
-
+                // unzip file.zip -d destination_folder
             },
             function () {
                 var file = fs.createWriteStream("temp/extractor.zip");
                 http.get("https://closure-templates.googlecode.com/files/closure-templates-msg-extractor-latest.zip", function(response) {
                     response.pipe(file);
                 });
+            },
+            function (next) {
+                // unzip file.zip -d destination_folder
             }
         ]);
     });
