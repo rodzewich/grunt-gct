@@ -116,10 +116,10 @@ module.exports = function (grunt) {
                 if (exists) {
                     remove = spawn("/usr/bin/env", ["rm", "-rf", "bin"]);
                     remove.stderr.on("data", function (data) {
-                        // todo: fix this
+                        output.push(data.toString("utf8"));
                     });
                     remove.stdout.on("data", function (data) {
-                        // todo: fix this
+                        output.push(data.toString("utf8"));
                     });
                     remove.on("close", function (code) {
                         if (code !== 0) {
@@ -175,6 +175,7 @@ module.exports = function (grunt) {
                 });
                 unzip.on("close", function (code) {
                     if (code !== 0) {
+                        // todo: fix this
                         grunt.log.writeln(output.join(""));
                     } else {
                         grunt.log.writeln("extract compiler");
@@ -196,10 +197,10 @@ module.exports = function (grunt) {
             function (next) {
                 var unzip = spawn("/usr/bin/env", ["unzip", path.join("temp", extractor), "-d", "bin/extractor"]);
                 unzip.stderr.on("data", function (data) {
-                    // todo: fix this
+                    output.push(data.toString("utf8"));
                 });
                 unzip.stdout.on("data", function (data) {
-                    // todo: fix this
+                    output.push(data.toString("utf8"));
                 });
                 unzip.on("close", function (code) {
                     if (code !== 0) {
@@ -213,10 +214,10 @@ module.exports = function (grunt) {
             function (next) {
                 var remove = spawn("/usr/bin/env", ["rm", "-rf", "temp"]);
                 remove.stderr.on("data", function (data) {
-                    // todo: fix this
+                    output.push(data.toString("utf8"));
                 });
                 remove.stdout.on("data", function (data) {
-                    // todo: fix this
+                    output.push(data.toString("utf8"));
                 });
                 remove.on("close", function (code) {
                     if (code !== 0) {
