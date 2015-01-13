@@ -30,6 +30,27 @@ module.exports = function (grunt) {
         }
         iterate();
     }
+    function displayPropertyWithPadding(property, value) {
+        var array = new Array(12 - property.length);
+        grunt.log.writeln(array.join(" ") + property.green + " " + value);
+    }
+    function displayError(error) {
+        grunt.log.write(">>".red + " " + String(error.name).red + " " + error.message);
+    }
+    function displayErrorContent(content) {
+        content.split(/(?:\n|\r)+/).forEach(function (item) {
+            item = item.replace(/\s+$/, "");
+            item = item.replace(/\s+/, " ");
+            if (item) {
+                while (item) {
+                    item = item.replace(/^\s+/, "");
+                    grunt.log.write(">>".red + " ");
+                    grunt.log.writeln(item.substr(0, columns - 3));
+                    item = item.substr(columns - 3);
+                }
+            }
+        });
+    }
     function mkdir(dir, callback) {
         deferred([
             function (iterate) {
@@ -103,7 +124,9 @@ module.exports = function (grunt) {
         var exists,
             compiler,
             extractor,
-            done = this.async();
+            done = this.async(),
+            COMPILER_ADDRESS = "http://closure-templates.googlecode.com/files/closure-templates-for-javascript-latest.zip",
+            EXTRACTOR_ADDRESS = "http://closure-templates.googlecode.com/files/closure-templates-msg-extractor-latest.zip";
         deferred([
             function (next) {
                 fs.exists("bin", function (result) {
@@ -112,20 +135,22 @@ module.exports = function (grunt) {
                 });
             },
             function (next) {
-                var remove;
+                var command,
+                    output = [];
                 if (exists) {
-                    remove = spawn("/usr/bin/env", ["rm", "-rf", "bin"]);
-                    remove.stderr.on("data", function (data) {
+                    command = spawn("/usr/bin/env", ["rm", "-rf", "bin"]);
+                    command.stderr.on("data", function (data) {
                         output.push(data.toString("utf8"));
                     });
-                    remove.stdout.on("data", function (data) {
+                    command.stdout.on("data", function (data) {
                         output.push(data.toString("utf8"));
                     });
-                    remove.on("close", function (code) {
+                    command.on("close", function (code) {
                         if (code !== 0) {
-                            // todo: display error
+                            displayErrorContent(output.join(""));
+                            done(false);
                         } else {
-                            grunt.log.writeln("remove bin");
+                            displayPropertyWithPadding("clean", "rm -rf bin");
                             next();
                         }
                     });
@@ -136,9 +161,10 @@ module.exports = function (grunt) {
             function (next) {
                 mkdir("bin/compiler", function (error) {
                     if (error) {
-                        // todo: display error
+                        displayError(error);
+                        done(false);
                     } else {
-                        grunt.log.writeln("mkdir bin/compiler");
+                        displayPropertyWithPadding("mkdir", "bin/compiler");
                         next();
                     }
                 });
@@ -146,84 +172,91 @@ module.exports = function (grunt) {
             function (next) {
                 mkdir("bin/extractor", function (error) {
                     if (error) {
-                        // todo: display error
+                        displayError(error);
+                        done(false);
                     } else {
-                        grunt.log.writeln("mkdir bin/extractor");
+                        displayPropertyWithPadding("mkdir", "bin/extractor");
                         next();
                     }
                 });
             },
             function (next) {
-                download("http://closure-templates.googlecode.com/files/closure-templates-for-javascript-latest.zip", function (error, filename) {
+                download(COMPILER_ADDRESS, function (error, filename) {
                     if (error) {
-                        // todo: display error
+                        displayError(error);
+                        done(false);
                     } else {
                         compiler = filename;
-                        grunt.log.writeln("download compiler");
+                        displayPropertyWithPadding("download", COMPILER_ADDRESS);
                         next();
                     }
                 });
             },
             function (next) {
-                var output = [],
-                    unzip = spawn("/usr/bin/env", ["unzip", path.join("temp", compiler), "-d", "bin/compiler"]);
-                unzip.stderr.on("data", function (data) {
+                var command = spawn("/usr/bin/env", ["unzip", path.join("temp", compiler), "-d", "bin/compiler"]),
+                    output = [];
+                command.stderr.on("data", function (data) {
                     output.push(data.toString("utf8"));
                 });
-                unzip.stdout.on("data", function (data) {
+                command.stdout.on("data", function (data) {
                     output.push(data.toString("utf8"));
                 });
-                unzip.on("close", function (code) {
+                command.on("close", function (code) {
                     if (code !== 0) {
-                        // todo: fix this
-                        grunt.log.writeln(output.join(""));
+                        displayErrorContent(output.join(""));
+                        done(false);
                     } else {
-                        grunt.log.writeln("extract compiler");
+                        displayPropertyWithPadding("extract", "unzip " + path.join("temp", compiler) + " -d bin/compiler");
                         next();
                     }
                 });
             },
             function (next) {
-                download("http://closure-templates.googlecode.com/files/closure-templates-msg-extractor-latest.zip", function (error, filename) {
+                download(EXTRACTOR_ADDRESS, function (error, filename) {
                     if (error) {
-                        // todo: display error
+                        displayError(error);
+                        done(false);
                     } else {
                         extractor = filename;
-                        grunt.log.writeln("download extractor");
+                        displayPropertyWithPadding("download", EXTRACTOR_ADDRESS);
                         next();
                     }
                 });
             },
             function (next) {
-                var unzip = spawn("/usr/bin/env", ["unzip", path.join("temp", extractor), "-d", "bin/extractor"]);
-                unzip.stderr.on("data", function (data) {
+                var command = spawn("/usr/bin/env", ["unzip", path.join("temp", extractor), "-d", "bin/extractor"]),
+                    output = [];
+                command.stderr.on("data", function (data) {
                     output.push(data.toString("utf8"));
                 });
-                unzip.stdout.on("data", function (data) {
+                command.stdout.on("data", function (data) {
                     output.push(data.toString("utf8"));
                 });
-                unzip.on("close", function (code) {
+                command.on("close", function (code) {
                     if (code !== 0) {
-                        // todo: display error
+                        displayErrorContent(output.join(""));
+                        done(false);
                     } else {
-                        grunt.log.writeln("extract extractor");
+                        displayPropertyWithPadding("extract", "unzip " + path.join("temp", extractor) + " -d bin/extractor");
                         next();
                     }
                 });
             },
             function (next) {
-                var remove = spawn("/usr/bin/env", ["rm", "-rf", "temp"]);
-                remove.stderr.on("data", function (data) {
+                var command = spawn("/usr/bin/env", ["rm", "-rf", "temp"]),
+                    output = [];
+                command.stderr.on("data", function (data) {
                     output.push(data.toString("utf8"));
                 });
-                remove.stdout.on("data", function (data) {
+                command.stdout.on("data", function (data) {
                     output.push(data.toString("utf8"));
                 });
-                remove.on("close", function (code) {
+                command.on("close", function (code) {
                     if (code !== 0) {
-                        // todo: display error
+                        displayErrorContent(output.join(""));
+                        done(false);
                     } else {
-                        grunt.log.writeln("clean temp");
+                        displayPropertyWithPadding("clean", "rm -rf temp");
                         next();
                     }
                 });
