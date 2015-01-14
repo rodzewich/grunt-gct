@@ -5,7 +5,9 @@ var spawn = require("child_process").spawn,
     url   = require("url"),
     http  = require("http"),
     path  = require("path"),
-    fs    = require("fs");
+    fs    = require("fs"),
+    COMPILER_ADDRESS  = "http://closure-templates.googlecode.com/files/closure-templates-for-javascript-latest.zip",
+    EXTRACTOR_ADDRESS = "http://closure-templates.googlecode.com/files/closure-templates-msg-extractor-latest.zip";
 
 module.exports = function (grunt) {
 
@@ -120,13 +122,11 @@ module.exports = function (grunt) {
         }
     });
 
-    grunt.registerTask("update", "Update dependencies", function () {
+    grunt.registerTask("download", "Download libraries.", function () {
         var exists,
             compiler,
             extractor,
-            done = this.async(),
-            COMPILER_ADDRESS = "http://closure-templates.googlecode.com/files/closure-templates-for-javascript-latest.zip",
-            EXTRACTOR_ADDRESS = "http://closure-templates.googlecode.com/files/closure-templates-msg-extractor-latest.zip";
+            done = this.async();
         deferred([
             function (next) {
                 fs.exists("bin", function (result) {
@@ -269,6 +269,6 @@ module.exports = function (grunt) {
 
     grunt.registerTask("compile", "Compile package", ["uglify:compile"]);
 
-    grunt.registerTask("default", "Build package", ["update", "compile"]);
+    grunt.registerTask("default", "Build package", ["download", "compile"]);
 
 };
